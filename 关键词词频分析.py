@@ -32,22 +32,23 @@ for xlsx_path in xlsx_paths:
                        index_col=0, engine='openpyxl')
     result = df["商品标题"].str.split(expand=True).stack().value_counts()
     keywords = result.index
-    score_result = {}
+    score_result = []
     for keyword in keywords:
         keyword_score = 0
+        keyword_count = 0
         for row_index, row_val in enumerate(df["商品标题"].values):
             if keyword in row_val:
                 # print(f"key:{keyword}\nrow_val: {row_val}\nscore: {df['评分数'].values[row_index]}")
+                keyword_count += 1
                 try:
                     keyword_score = keyword_score + \
                         int(df['评分数'].values[row_index])
                 except:
                     pass
         # print(f"final score for key: {keyword} is => {keyword_score}")
-        score_result.update({
-            keyword: keyword_score
-        })
-    final_result = pd.DataFrame(score_result.items(), columns=['关键词', '分数'])
+        score_result.append([keyword, keyword_score, keyword_count])
+    print(f'score_result ==> {score_result}')
+    final_result = pd.DataFrame(score_result, columns=['关键词', '分数', '词频'])
     final_result_path = f'{join(result_path, os.path.splitext(xlsx_path)[0])}_分析结果.xlsx'
     writer = pd.ExcelWriter(final_result_path)
     print(f"关键词 - 词频加权(+评分数)分析结果 - {xlsx_path}:\n{final_result}")
