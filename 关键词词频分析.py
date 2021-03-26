@@ -49,10 +49,11 @@ for xlsx_path in xlsx_paths:
         score_result.append([keyword, keyword_score, keyword_count])
     print(f'score_result ==> {score_result}')
     final_result = pd.DataFrame(score_result, columns=['关键词', '分数', '词频'])
+    final_result_sorted = final_result.sort_values(['词频'], ascending=[False])
     final_result_path = f'{join(result_path, os.path.splitext(xlsx_path)[0])}_分析结果.xlsx'
     writer = pd.ExcelWriter(final_result_path)
-    print(f"关键词 - 词频加权(+评分数)分析结果 - {xlsx_path}:\n{final_result}")
-    final_result.to_excel(writer, startcol=0, startrow=1)
+    print(f"关键词 - 词频加权(+评分数)分析结果 - {xlsx_path}:\n{final_result_sorted}")
+    final_result_sorted.to_excel(writer, startcol=0, startrow=1)
     worksheet = writer.sheets['Sheet1']
     worksheet.write_string(0, 0, '关键词 - 词频加权(+评分数)分析')
     writer.save()
