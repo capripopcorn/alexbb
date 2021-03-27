@@ -6,7 +6,9 @@ from os import listdir
 import os
 import pandas as pd
 import sys
+import re
 from pathlib import Path
+import inflect
 
 assert sys.version_info >= (3, 6), "运行python版本必需高于3.6"
 
@@ -33,6 +35,9 @@ for xlsx_path in xlsx_paths:
     result = df["商品标题"].str.split(expand=True).stack().value_counts()
     keywords = result.index
     score_result = []
+    # language processing engine
+    p = inflect.engine()
+    # p.classical(all=False) 
     for keyword in keywords:
         keyword_score = 0
         keyword_count = 0
@@ -46,16 +51,25 @@ for xlsx_path in xlsx_paths:
                 except:
                     pass
         # print(f"final score for key: {keyword} is => {keyword_score}")
-        score_result.append([keyword, keyword_score, keyword_count])
+        regex_search_term = r"[\…\-!$%^&*()_+|~=`{}\[\]:\";'<>?,.\/]"
+        # 1
+        keyword = re.sub(regex_search_term, '', keyword)
+        # 2
+        keyword = keyword.lower()
+        # 3
+        singular_keyword = p.singular_noun(keyword) if p.singular_noun(keyword) else keyword
+        print(f"singular_keyword --> {singular_keyword}")
+        score_result.append([singular_keyword, keyword_score, keyword_count])
     print(f'score_result ==> {score_result}')
     final_result = pd.DataFrame(score_result, columns=['关键词', '分数', '词频'])
     # 1.去掉包括符号的关键词
-    regex_to_replace = r"[-!$%^&*()_+|~=`{}\[\]:\";'<>?,.\/]"
-    final_result.关键词 = final_result.关键词.replace({regex_to_replace:''}, regex=True)
+    # [见上方loop]
+    # final_result.关键词 = final_result.关键词.replace({regex_to_replace:''}, regex=True)
     # 2.统一变成小写
-    final_result.关键词 = final_result.关键词.str.lower()
+    # [见上方loop]
+    # final_result.关键词 = final_result.关键词.str.lower()
     # 3.复数 -> 单数，除特殊单复数, eg: people -x-> person (扭曲过多关键词传达的信息，即people和person在关键词分析中可能不代表一种关键词)
-    
+    # [见上方loop]
     # 4.去重, 叠加重复关键词的分数和词频
     final_result = final_result.groupby('关键词')['分数','词频'].agg('sum').reset_index()
     final_result_sorted = final_result.sort_values(['词频'], ascending=[False]).reset_index(drop=True)

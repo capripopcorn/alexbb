@@ -3,3 +3,4 @@ openpyxl
 xlsxwriter
 pyinstaller
 autopep8
+inflect
