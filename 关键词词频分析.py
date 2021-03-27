@@ -49,6 +49,15 @@ for xlsx_path in xlsx_paths:
         score_result.append([keyword, keyword_score, keyword_count])
     print(f'score_result ==> {score_result}')
     final_result = pd.DataFrame(score_result, columns=['关键词', '分数', '词频'])
+    # 1.去掉包括符号的关键词
+    regex_to_replace = r"[-!$%^&*()_+|~=`{}\[\]:\";'<>?,.\/]"
+    final_result.关键词 = final_result.关键词.replace({regex_to_replace:''}, regex=True)
+    # 2.统一变成小写
+    final_result.关键词 = final_result.关键词.str.lower()
+    # 3.复数 -> 单数，除特殊单复数, eg: people -x-> person (扭曲过多关键词传达的信息，即people和person在关键词分析中可能不代表一种关键词)
+    
+    # 4.去重, 叠加重复关键词的分数和词频
+    final_result = final_result.groupby('关键词')['分数','词频'].agg('sum').reset_index()
     final_result_sorted = final_result.sort_values(['词频'], ascending=[False]).reset_index(drop=True)
     final_result_path = f'{join(result_path, os.path.splitext(xlsx_path)[0])}_分析结果.xlsx'
     writer = pd.ExcelWriter(final_result_path)
